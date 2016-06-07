@@ -1,0 +1,1136 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Git,hook," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="翻译自How To Use Git Hooks To Automate Development and Deployment Tasks
+
+
+介绍版本控制在现代软件开发中变成了一个核心的要求。它使得项目可以安全的记录变更，恢复，完整性检查，多人协作等等。git在这些年里被广泛的接纳，得益于其分布式的架构和它在向各方传递变更的速度。
+虽然git的工具套件提供了很多现成的特性，其中最实用的就是它的灵">
+<meta property="og:type" content="article">
+<meta property="og:title" content="利用Git Hooks自动化开发和部署">
+<meta property="og:url" content="http://lioil.thisteam.cn/20160518/git-hooks/index.html">
+<meta property="og:site_name" content="Bazinga">
+<meta property="og:description" content="翻译自How To Use Git Hooks To Automate Development and Deployment Tasks
+
+
+介绍版本控制在现代软件开发中变成了一个核心的要求。它使得项目可以安全的记录变更，恢复，完整性检查，多人协作等等。git在这些年里被广泛的接纳，得益于其分布式的架构和它在向各方传递变更的速度。
+虽然git的工具套件提供了很多现成的特性，其中最实用的就是它的灵">
+<meta property="og:image" content="http://lioil.thisteam.cn/20160518/git-hooks/first_deploy.png">
+<meta property="og:image" content="http://lioil.thisteam.cn/20160518/git-hooks/deploy_changes.png">
+<meta property="og:image" content="http://lioil.thisteam.cn/20160518/git-hooks/pushed_prod.png">
+<meta property="og:image" content="http://lioil.thisteam.cn/20160518/git-hooks/devel_commit.png">
+<meta property="og:image" content="http://lioil.thisteam.cn/20160518/git-hooks/new_prod.png">
+<meta property="og:updated_time" content="2016-06-05T14:46:08.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="利用Git Hooks自动化开发和部署">
+<meta name="twitter:description" content="翻译自How To Use Git Hooks To Automate Development and Deployment Tasks
+
+
+介绍版本控制在现代软件开发中变成了一个核心的要求。它使得项目可以安全的记录变更，恢复，完整性检查，多人协作等等。git在这些年里被广泛的接纳，得益于其分布式的架构和它在向各方传递变更的速度。
+虽然git的工具套件提供了很多现成的特性，其中最实用的就是它的灵">
+<meta name="twitter:image" content="http://lioil.thisteam.cn/20160518/git-hooks/first_deploy.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    },
+    algolia: {
+          applicationID: 'KTMMR5BXI6',
+          apiKey: '6c7ee46d5642ac0d119e86ab964fca82',
+          indexName: 'hexo',
+          hits: {"per_page":10},
+          labels: {"input_placeholder":"搜索...","hits_empty":"未发现与 「${query}」相关的内容","hits_stats":"${hits} 条相关条目，使用了 ${time} 毫秒"}
+        }
+  };
+</script>
+
+  <title> 利用Git Hooks自动化开发和部署 | Bazinga </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Bazinga</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">是时候多动动笔，多记录了</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="#" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="site-search">
+  <div class="algolia-popup popup">
+    <div class="algolia-search">
+      <div class="algolia-search-input-icon">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="algolia-search-input" id="algolia-search-input"></div>
+    </div>
+
+    <div class="algolia-results">
+      <div id="algolia-stats"></div>
+      <div id="algolia-hits"></div>
+      <div id="algolia-pagination" class="algolia-pagination"></div>
+    </div>
+
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+  </div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                利用Git Hooks自动化开发和部署
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-18T15:28:25+08:00" content="2016-05-18">
+              2016-05-18
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/服务器上那点事儿/" itemprop="url" rel="index">
+                    <span itemprop="name">服务器上那点事儿</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/20160518/git-hooks/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="20160518/git-hooks/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/20160518/git-hooks/" class="leancloud_visitors" data-flag-title="利用Git Hooks自动化开发和部署">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>翻译自<a href="https://www.digitalocean.com/community/tutorials/how-to-use-git-hooks-to-automate-development-and-deployment-tasks" target="_blank" rel="external">How To Use Git Hooks To Automate Development and Deployment Tasks
+</a></p>
+</blockquote>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>版本控制在现代软件开发中变成了一个核心的要求。它使得项目可以安全的记录变更，恢复，完整性检查，多人协作等等。<code>git</code>在这些年里被广泛的接纳，得益于其分布式的架构和它在向各方传递变更的速度。</p>
+<p>虽然<code>git</code>的工具套件提供了很多现成的特性，其中最实用的就是它的灵活性。通过对钩子系统的使用，git允许开发者或者管理员通过让git根据不同的events和actions的触发来运行自己的脚本，从而对git的功能进行扩展。</p>
+<p>这篇文章中，我会介绍git钩子的原理和如何实现自动化任务。我们将会使用Ubuntu 14.04，不过所有系统运行git都大同小异。</p>
+<a id="more"></a>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>开始之前，你需要先在你的运行环境中安装好git。你可以参考这篇教程<a href="https://www.digitalocean.com/community/tutorials/how-to-install-git-on-ubuntu-14-04" target="_blank" rel="external">Ubuntu14.04安装git</a>。</p>
+<p>你应该简要了解git的使用。如果你需要入门，可以看看这个教程<a href="https://www.digitalocean.com/community/tutorial_series/introduction-to-git-installation-usage-and-branches" target="_blank" rel="external">Git介绍：安装，使用，分支</a></p>
+<p>如果上边的都没有问题，继续往下看。</p>
+<h2 id="Git-Hooks的基本原理"><a href="#Git-Hooks的基本原理" class="headerlink" title="Git Hooks的基本原理"></a>Git Hooks的基本原理</h2><p>Git Hooks是一个相当简单的概念，它为了满足特定的需求。当开发者开发一个协作的项目，维护代码风格，或者部署项目（这些都是使用git常见的情况）时，经常有有些重复性任务在每次完成一个动作时都要执行。</p>
+<p>Git钩子是基于事件的。当你运行了特定的git命令，git会检查git仓库中<code>hooks</code>路径下有没有相关脚本要执行。</p>
+<p>有的脚本在git指令之前执行，这可以用来确保代码的完整（进行一些完整性检查）或者提前部署一下环境。那些在git事件之后执行的脚本，一般就是用来部署代码，重新建立权限（一些git不能很好记录的事情）等等。</p>
+<p>使用git的这些功能，就可以强制实施策略，确保一致性，和控制你的环境，甚至处理部署任务。</p>
+<p>Scott Chacon写的<a href="http://git-scm.com/book" target="_blank" rel="external">Pro Git</a>这本书试图将钩子归类，他是这样写的：</p>
+<ul>
+<li><p>客户端钩子：在提交者计算机上被调用和执行的钩子。这些可以进一步分为一些小的类别：</p>
+<ul>
+<li><p>提交工作流钩子：提交钩子是用来检测那些需要在提交的前后需要执行的动作。他们可以用来运行完整性检查,预填充提交信息和验证消息详情。你也可以基于提交来推送通知。</p>
+</li>
+<li><p>邮件工作流的钩子：这一类的钩子包含了当你使用邮件补丁时触发的动作。类似Linux内核提交和通过邮件方法回看补丁。这些都和提交钩子是一样的，但是邮件钩子可以被负责申请提交代码的管理员所使用。</p>
+</li>
+<li><p>其它：其它客户端钩子包括那些在merge,check out,rebase,rewrite,clean时执行的钩子。</p>
+</li>
+</ul>
+</li>
+<li>服务端钩子：这些钩子在那些用来接收推送代码的服务器上执行。通常，这就是项目的主要git仓库。同样，Chacon也把这些细分成一下几类。<ul>
+<li><code>pre-receive</code>和<code>post-receive</code>: 这两个在服务器收到push操作时执行，比如检查项目一致性和在push之后立即部署项目。</li>
+<li><code>update</code>:这个和<code>pre-receive</code>很像，但是它是一个分支接着一个分支的运作的基础上,在每个分支被更新之前执行。</li>
+</ul>
+</li>
+</ul>
+<p>这些分类能使我们对可以建立钩子的事件有了一个大体的认识。但是为了确切了解他们是怎么运作的，最好还是亲身试验来找出你想要实现的方案。</p>
+<p>某些钩子还需要参数。这意味着，当git为某个钩子调用脚本，它会传入脚本会用到的一些相关的数据，以便完成相应的任务。所有的hooks如下表所示。</p>
+<table>
+<thead>
+<tr>
+<th>Hook 名称</th>
+<th>触发命令</th>
+<th>描述</th>
+<th>参数（数量和描述）  </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>applypatch-msg</td>
+<td><code>git am</code></td>
+<td>可以编辑提交信息，常用于验证或者标准化补丁信息。非零状态会放弃这次提交</td>
+<td>1个参数，包含被建议提交信息的临时文件名</td>
+</tr>
+<tr>
+<td>pre-applypatch</td>
+<td><code>git am</code></td>
+<td>在补丁被运用之后，但是提交之前运行。非零退出，修改仍为未提交状态。可以用来在正式提交之前检查状态树</td>
+<td>无</td>
+</tr>
+<tr>
+<td>post-applypatch</td>
+<td><code>git am</code></td>
+<td>这个钩子在补丁应用和提交之后运行。因此它无法阻止打补丁的过程，主要用于创建通知。</td>
+<td>无</td>
+</tr>
+<tr>
+<td>pre-commit</td>
+<td><code>git commit</code></td>
+<td>这个钩子在获取提交信息之前运行。返回非零值时放弃此次提交，它是用来检查提交本身(而不是提交信息）</td>
+<td>无</td>
+</tr>
+<tr>
+<td>prepare-commit-msg</td>
+<td><code>git commit</code></td>
+<td>在接受到默认提交信息之后，在提交信息编辑器显示之前运行。返回非零值退出，放弃这次提交。它可以用来以一种不可被取消的方式编辑信息。</td>
+<td>(1到3个参数)文件名连同提交信息，原始提交信息（<code>message</code>,<code>template</code>,<code>merge</code>,<code>squash</code>,<code>commit</code>),和提交的SHA-1校验和(当对已有信息进行操作时)。</td>
+</tr>
+<tr>
+<td>commit-msg</td>
+<td><code>git commit</code></td>
+<td>可以被用来在信息被编辑之后调整信息，以便确保它符合标准，或者依照标准驳回此信息。如果该hook脚本以非零退出，<code>Git</code>放弃提交。</td>
+<td>1个参数，存放提交信息的文件。</td>
+</tr>
+<tr>
+<td>post-commit</td>
+<td><code>git commit</code></td>
+<td>在整个提交过程完成后运行。因此，它不能中断提交。这个hook主要用来允许通知。</td>
+<td>无</td>
+</tr>
+<tr>
+<td>pre-rebase</td>
+<td><code>git rebase</code></td>
+<td>当rebase一个分支的时候执行。主要用于在不可取的时候中止rebase。</td>
+<td>(1到2个参数)上游分支的节点，需要被rebase的分支(在rebase分支为当前时不设置)</td>
+</tr>
+<tr>
+<td>post-checkout</td>
+<td><code>git checkout</code>和<code>git clone</code></td>
+<td>在更新工作树之后执行checkout或者clone之后运行。它主要用于验证状态，展示区别和在必要时配置环境。</td>
+<td>(3个参数)之前<code>HEAD</code>的引用，新<code>HEAD</code>的引用，是否为一个检出的分支的标记。（1个参数）或者一个检出的文件（0）</td>
+</tr>
+<tr>
+<td>post-merge</td>
+<td><code>git merge</code>或<code>git pull</code></td>
+<td>在merge之后执行。因此，它不能中止merge操作，它可以用来存储或者申请权限或者其他不属于git的数据。</td>
+<td>(1个参数)merge是否为squash的标记。</td>
+</tr>
+<tr>
+<td>pre-push</td>
+<td><code>git push</code></td>
+<td>在push到远程服务器之前执行。再加上参数，额外的信息，以<code>&lt;本地ref&gt; &lt;本地sha1&gt; &lt;远程ref&gt; &lt;远程sha1&gt;</code>的形式。解析输入可以获得可以用来检验的额外信息。比如说，如果<code>local sha1</code>是40个零的长度，push是一个删除操作，如果<code>remote sha1</code>是40个零，那么它是一个新的分支。这个特性可以将已经提交的refs和当前状况做很多比较。非零退出，将会中止这次提交。</td>
+<td>(2个参数)远程地址名称，远程地址</td>
+</tr>
+<tr>
+<td>pre-receive</td>
+<td>远程仓库<code>git-receive-pack</code></td>
+<td>在更新提交的refs之前，在远程仓库上运行。非零的状态中止。虽然不接受参数，它为每一个ref传递一个标准输入的字符串，以<code>&lt;旧的值&gt; &lt;新的值&gt; &lt;ref的名称&gt;</code>的形式。</td>
+<td>无</td>
+</tr>
+<tr>
+<td>update</td>
+<td>远程仓库<code>git-receive-pack</code></td>
+<td>在远程仓库上，每一个ref被提交运行一次，而不是每次提交都运行。非零的状态会中止。这可以用来确保所有的提交都只用fast forward模式</td>
+<td>(三个参数)被更新的ref名称，旧的对象名，新的对象名。</td>
+</tr>
+<tr>
+<td>post-receive</td>
+<td>远程仓库<code>git-receive-pack</code></td>
+<td>在所有的ref更新后运行。不需要参数，但是通过标准输入接受信息，格式为<code>&lt;旧的值&gt; &lt;新的值&gt; &lt;ref的名称&gt;</code>。因为在更新后运行，所以不能被中止。</td>
+<td>无</td>
+</tr>
+<tr>
+<td>post-update</td>
+<td>远程仓库<code>git-receive-pack</code></td>
+<td>在所有的refs都已经被push之后只运行一次。它在这方面和post-receive很相似，但是不接受之前和之后的值。它主要用来根据被推送的refs实现通知。</td>
+<td>每一个被推送的包含它名字的refs。</td>
+</tr>
+<tr>
+<td>pre-auto-gc</td>
+<td><code>git gc --auto</code></td>
+<td>在<code>clean</code>仓库之前自动做一些检查</td>
+<td>无</td>
+</tr>
+<tr>
+<td>post-rewrite</td>
+<td><code>git commit --amend</code>,<code>git-rebase</code></td>
+<td>当git命令重写已经提交的数据时执行。除了接受的参数，它还以<code>&lt;旧sha1&gt;&lt;新sha1&gt;</code>的格式接受标准输入的字符串。</td>
+<td>(1个参数)触发这个钩子的命令名称(amend或者rebase)</td>
+</tr>
+</tbody>
+</table>
+<p>现在你已经有了大体的概念，我们可以在几个场景下试验一下。</p>
+<h2 id="建立一个仓库"><a href="#建立一个仓库" class="headerlink" title="建立一个仓库"></a>建立一个仓库</h2><p>一开始，我们需要先建立一个新的空仓库，在我们的主目录下。我们可以给它命名为<code>proj</code>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir ~/proj</span><br><span class="line"><span class="built_in">cd</span> ~/proj</span><br><span class="line">git init</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Initialized empty Git repository <span class="keyword">in</span> /home/demo/proj/.git/</span><br></pre></td></tr></table></figure>
+<p>现在，我们在这个在git控制下的空目录内。在我们开始之前，我们先看看目录中的隐藏文件，它们在<code>.git</code>目录下：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> .git</span><br><span class="line">ls -F</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">branches/  config  description  HEAD  hooks/  info/  objects/  refs/</span><br></pre></td></tr></table></figure>
+<p>我们可以看到一些文件和目录。我们感兴趣的就是这个<code>hooks</code>目录：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> hooks</span><br><span class="line">ls <span class="_">-l</span></span><br></pre></td></tr></table></figure></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">total 40</span><br><span class="line">-rwxrwxr-x 1 demo demo  452 Aug  8 16:50 applypatch-msg.sample</span><br><span class="line">-rwxrwxr-x 1 demo demo  896 Aug  8 16:50 commit-msg.sample</span><br><span class="line">-rwxrwxr-x 1 demo demo  189 Aug  8 16:50 post-update.sample</span><br><span class="line">-rwxrwxr-x 1 demo demo  398 Aug  8 16:50 pre-applypatch.sample</span><br><span class="line">-rwxrwxr-x 1 demo demo 1642 Aug  8 16:50 pre-commit.sample</span><br><span class="line">-rwxrwxr-x 1 demo demo 1239 Aug  8 16:50 prepare-commit-msg.sample</span><br><span class="line">-rwxrwxr-x 1 demo demo 1352 Aug  8 16:50 pre-push.sample</span><br><span class="line">-rwxrwxr-x 1 demo demo 4898 Aug  8 16:50 pre-rebase.sample</span><br><span class="line">-rwxrwxr-x 1 demo demo 3611 Aug  8 16:50 update.sample</span><br></pre></td></tr></table></figure>
+<p>在这儿，我们可以看到。首先，每一个文件都标记成了可执行。因为这些脚本都是按照名称执行的，他们必须是可执行的，而且它们的第一行必须是<a href="http://en.wikipedia.org/wiki/Shebang_(Unix" target="_blank" rel="external">Shebang(<code>#!</code>)</a>#Magic_number)指向正确的脚本解释器。比较常见的是bash，perl，python等。</p>
+<p>你还会注意到的是，所有文件都是以<code>.sample</code>结尾的。这是因为git只是简单的看文件名来查找要执行的hook文件。文件名和git想要查找的出现偏差，这样可以达到禁用的目的。想启用任意一个脚本，只需要去掉结尾的<code>.sample</code>后缀。</p>
+<p>让我们退回到我们的工作目录。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ../..</span><br></pre></td></tr></table></figure></p>
+<h2 id="第一个例子：用一个post-commit-Hook来部署一个web服务。"><a href="#第一个例子：用一个post-commit-Hook来部署一个web服务。" class="headerlink" title="第一个例子：用一个post-commit Hook来部署一个web服务。"></a>第一个例子：用一个post-commit Hook来部署一个web服务。</h2><p>我们第一个例子，使用<code>post-commit</code>hook来展示，如何在每一次提交之后在本地web服务器中部署代码。这不是在生产环境中使用的hook，但是可以让你验证一些重要的，文档里没怎么体现的东西，他们是你在使用hooks的时候应该知道的。</p>
+<p>首先，我们安装一个Apache web server。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update</span><br><span class="line">sudo apt-get install apache2</span><br></pre></td></tr></table></figure>
+<p>为了让我们的脚本可以修改web根目录<code>/var/www/html</code>(这是Ubuntu14.04的文档根目录。可以按需修改)，我们需要有写权限。我们给我们的普通用户这个目录的所有权。输入以下命令：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo chown -R `whoami`:`id -gn` /var/www/html</span><br></pre></td></tr></table></figure></p>
+<p>现在，在我们的项目根目录下，创建<code>index.html</code>文件<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/proj</span><br><span class="line">nano index.html</span><br></pre></td></tr></table></figure></p>
+<p>在文件中，我们添加一小段HTML主要用做论证我们的观点。不用太复杂：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">h1</span>&gt;</span>Here is a title!<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">p</span>&gt;</span>Please deploy me!<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>添加这个文件到git：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br></pre></td></tr></table></figure></p>
+<p>在提交之前，我们将要为这个仓库建立我们的<code>post-commit</code>钩子。在<code>.git/hooks</code>中创建文件<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim .git/hooks/post-commit</span><br></pre></td></tr></table></figure></p>
+<p>在我们在文件中添加脚本之前，我们需要知道git在运行钩子时如何建立环境。</p>
+<h2 id="关于git钩子环境变量的一些题外话"><a href="#关于git钩子环境变量的一些题外话" class="headerlink" title="关于git钩子环境变量的一些题外话"></a>关于git钩子环境变量的一些题外话</h2><p>在我们开始写脚本之前，我们需要知道git钩子运行时建立的环境变量。为了让我们的脚本工作，我们最终需要解除一个git调用<code>post-commit</code>钩子时设置的环境变量。</p>
+<p>如果你希望写一个运行稳定的git钩子，你需要先理解一个很重要的知识点。git根据你调用哪个钩子来建立不同的环境变量。这意味着git获取信息的环境会根据钩子的不同而不同。</p>
+<p>第一个状况是，会使得你的脚本运行环境不可预测，如果你不知道哪个变量被自动设置了。第二个状况就是那个被设置的变量在git自身的文档里几乎没有体现。</p>
+<p>幸运的是，Mark Longair开发了当运行钩子时<a href="http://longair.net/blog/2011/04/09/missing-git-hooks-documentation/" target="_blank" rel="external">检测git设置的每一个变量的方法</a>。它涉及到在git钩子脚本中添加下列内容：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="built_in">echo</span> Running <span class="variable">$BASH_SOURCE</span></span><br><span class="line"><span class="built_in">set</span> | egrep GIT</span><br><span class="line"><span class="built_in">echo</span> PWD is <span class="variable">$PWD</span></span><br></pre></td></tr></table></figure></p>
+<p>他的篇文章是2011年写的，当时git的版本是1.7.1，所以现在已经有了一些变化。我的这篇文章是2014年8月写的，当前git版本是1.9.1。</p>
+<p>在此git版本下的测试结果如下（包括工作目录）。测试用的本地工作目录为<code>/home/demo/test_hooks</code>和一个裸的远程仓库<code>/home/demo/origin/test_hooks.git</code>:</p>
+<ul>
+<li><p>钩子：<code>applypatch-msg</code>, <code>pre-applypatch</code>, <code>post-applypatch</code></p>
+<ul>
+<li>环境变量：</li>
+<li><code>GIT_AUTHOR_DATE=&#39;Mon, 11 Aug 2014 11:25:16 -0400&#39;</code></li>
+<li><code>GIT_AUTHOR_EMAIL=demo@example.com</code></li>
+<li><code>GIT_AUTHOR_NAME=&#39;Demo User&#39;</code></li>
+<li><code>GIT_INTERNAL_GETTEXT_SH_SCHEME=gnu</code></li>
+<li><code>GIT_REFLOG_ACTION=am</code></li>
+<li>工作目录：<code>/home/demo/test_hooks</code></li>
+</ul>
+</li>
+<li><p>钩子：<code>pre-commit</code>, <code>prepare-commit-msg</code>, <code>commit-msg</code>, <code>post-commit</code></p>
+<ul>
+<li>环境变量：</li>
+<li><code>GIT_AUTHOR_DATE=&#39;@1407774159 -0400&#39;</code></li>
+<li><code>GIT_AUTHOR_EMAIL=demo@example.com</code></li>
+<li><code>GIT_AUTHOR_NAME=&#39;Demo User&#39;</code></li>
+<li><code>GIT_DIR=.git</code></li>
+<li><code>GIT_EDITOR=:</code></li>
+<li><code>GIT_INDEX_FILE=.git/index</code></li>
+<li><code>GIT_PREFIX=</code></li>
+<li>工作目录：<code>/home/demo/test_hooks</code></li>
+</ul>
+</li>
+<li>钩子：<code>pre-rebase</code><ul>
+<li>环境变量：</li>
+<li><code>GIT_INTERNAL_GETTEXT_SH_SCHEME=gnu</code></li>
+<li><code>GIT_REFLOG_ACTION=rebase</code></li>
+<li>工作目录：<code>/home/demo/test_hooks</code></li>
+</ul>
+</li>
+<li>钩子：<code>post-checkout</code><ul>
+<li>环境变量：</li>
+<li><code>GIT_DIR=.git</code></li>
+<li><code>GIT_PREFIX=</code></li>
+<li>工作目录：<code>/home/demo/test_hooks</code></li>
+</ul>
+</li>
+<li>钩子：<code>post-merge</code><ul>
+<li>环境变量：</li>
+<li><code>GITHEAD_4b407c...</code></li>
+<li><code>GIT_DIR=.git</code></li>
+<li><code>GIT_INTERNAL_GETTEXT_SH_SCHEME=gnu</code></li>
+<li><code>GIT_PREFIX=</code></li>
+<li><code>GIT_REFLOG_ACTION=&#39;pull other master&#39;</code></li>
+<li>工作目录：<code>/home/demo/test_hooks</code></li>
+</ul>
+</li>
+<li>钩子：<code>pre-push</code><ul>
+<li>环境变量：</li>
+<li><code>GIT_PREFIX=</code></li>
+<li>工作目录：<code>/home/demo/test_hooks</code></li>
+</ul>
+</li>
+<li>钩子：<code>pre-receive·</code>, <code>update</code>, <code>post-receive</code>, <code>post-update</code><ul>
+<li>环境变量：</li>
+<li><code>GIT_DIR=.</code></li>
+<li>工作目录：<code>/home/demo/origin/test_hooks.git</code></li>
+</ul>
+</li>
+<li>钩子：<code>pre-auto-gc</code><ul>
+<li>(未知，因为这个钩子很难可靠地触发)</li>
+</ul>
+</li>
+<li>钩子：<code>post-rewrite</code><ul>
+<li>环境变量：</li>
+<li><code>GIT_AUTHOR_DATE=&#39;@1407773551 -0400&#39;</code></li>
+<li><code>GIT_AUTHOR_EMAIL=demo@example.com</code></li>
+<li><code>GIT_AUTHOR_NAME=&#39;Demo User&#39;</code></li>
+<li><code>GIT_DIR=.git</code></li>
+<li><code>GIT_PREFIX=</code></li>
+<li>工作目录：<code>/home/demo/test_hooks</code></li>
+</ul>
+</li>
+</ul>
+<p>这些变量暗示了git如何查看自己的环境。我们将利用上述关于变量的信息来确保我们的脚本正确考虑了它的环境。</p>
+<h2 id="回到脚本"><a href="#回到脚本" class="headerlink" title="回到脚本"></a>回到脚本</h2><p>现在你对所需的环境有了一定概念（看一下为<code>post-commit</code>钩子所设置的变量），我们可以开始我们的脚本了。</p>
+<p>由于git钩子是标准脚本，我们需要告诉git，我们用什么解释器：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br></pre></td></tr></table></figure></p>
+<p>在这个之后，我们只要在提交后使用git取出最新版本的仓库，放到web目录下。要完成这件事儿，我们需要把我们的工作目录设置到apache的文件根目录。我们也需要把我们的git目录设置为仓库的地址。</p>
+<p>我们想要强制操作来保证每一次都成功，即使当前工作目录中存在冲突。脚本应该这样：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"> #!/bin/bash</span><br><span class="line">git --work-tree=/var/www/html --git-dir=/home/demo/proj/.git checkout -f</span><br></pre></td></tr></table></figure></p>
+<p>这时，我们已经几乎完成了。然而，我们需要更仔细查看每次<code>post-commit</code>钩子运行时的环境变量。尤其是<code>GIT_INDEX_FILE</code>被设置成<code>.git/index</code>。</p>
+<p>这个路径与工作目录相关，在我们的例子中是<code>/var/www/html</code>。由于git的index文件不存在，脚本会失效，如果我们保留当前的设置。为了避免这种情况，我们可以手动设置这个变量，这将导致git相对于仓库目录去搜索。我们需要在脚本中的<code>checkout</code>之前添加一行:<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">#!/bin/bash</span></span><br><span class="line"><span class="built_in">unset</span> GIT_INDEX_FILE</span><br><span class="line">git --work-tree=/var/www/html --git-dir=/home/demo/proj/.git checkout <span class="_">-f</span></span><br></pre></td></tr></table></figure></p>
+<p>这些冲突正是git钩子出的问题经常很难诊断的原因。你必须清楚git是怎么构建它的运行环境的。</p>
+<p>当你编辑结束后，保存并退出这个文件。</p>
+<p>因为这是一个常规的脚本文件，我们需要让它有可执行权限：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod +x .git/hooks/post-commit</span><br></pre></td></tr></table></figure></p>
+<p>现在，我们最终准备好在我们的git仓库中提交变更。确保你退到了正确的目录，并且提交这些变更：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/proj</span><br><span class="line">git commit -m <span class="string">"here we go..."</span></span><br></pre></td></tr></table></figure></p>
+<p>现在，如果你使用浏览器访问服务器的域名或者IP地址，你讲看到你刚刚创建的这个index.html文件：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://server_domain_or_IP</span><br></pre></td></tr></table></figure></p>
+<img src="/20160518/git-hooks/first_deploy.png" alt="first_deploy.png" title="">
+<p>正如你所见，我们最近的变更在提交之后被自动的推送到了服务器根目录下。我们可以再做一些改变来证明，钩子在每次提交之后都正确工作了。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">"&lt;p&gt;Here is a change.&lt;/p&gt;"</span> &gt;&gt; index.html</span><br><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">"First change"</span></span><br></pre></td></tr></table></figure></p>
+<p>当我们刷新浏览器，我们可以直接看到新的变化：<br><img src="/20160518/git-hooks/deploy_changes.png" alt="deploy_changes.png" title=""></p>
+<p>如你所见，这种配置比较方便本地测试，然而，你可能永远不希望在生产环境中这样提交。还是在经过测试后确保没问题了再提交，这样比较安全。</p>
+<h2 id="利用Git钩子在另外的生产环境中部署"><a href="#利用Git钩子在另外的生产环境中部署" class="headerlink" title="利用Git钩子在另外的生产环境中部署"></a>利用Git钩子在另外的生产环境中部署</h2><p>在第二个例子中，我们将要示范一个更新生产服务器更好的方式。我们可以通过使用push-to-deploy模型以便当我们推送到裸仓库时更新我们的web服务器。</p>
+<p>我们可以沿用上面的服务器当作开发机。这是我们做改动工作的地方。我们可以在每次提交之后看到改变。</p>
+<p>在我们的生产机器上，我们将会配置另一个web服务器，一个裸的仓库用来推送我们的变更，还有一个git钩子在每次接受到推送都会执行。以普通用户身份，用sudo，完成系列步骤。</p>
+<h2 id="建立生产环境的post-receive钩子"><a href="#建立生产环境的post-receive钩子" class="headerlink" title="建立生产环境的post-receive钩子"></a>建立生产环境的post-receive钩子</h2><p>现在生产环境中安装web服务器：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update</span><br><span class="line">sudo apt-get install apache2</span><br></pre></td></tr></table></figure></p>
+<p>然后，我们再更改目录拥有者给当前用户：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo chown -R `whoami`:`id -gn` /var/www/html</span><br></pre></td></tr></table></figure></p>
+<p>我们还需要在服务器上安装git：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install git</span><br></pre></td></tr></table></figure></p>
+<p>现在我们可以在home目录下创建一个目录，来存放我们的仓库。然后我们进入这个目录来初始化一个裸的仓库。裸仓库不包含工作目录，这对于服务器来说更好，因为我们不在上面直接工作：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir ~/proj</span><br><span class="line"><span class="built_in">cd</span> ~/proj</span><br><span class="line">git init --bare</span><br></pre></td></tr></table></figure></p>
+<p>这是一个裸仓库，所以没有工作目录并且所有文件都在<code>.git</code>文件夹下，该文件夹通常在根目录下。</p>
+<p>我们需要创建另一个git钩子，这一次，我们感兴趣的是post-receive钩子，它是在服务器端接收到<code>git push</code>时执行。在编辑器中打开这个文件：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nano hooks/post-receive</span><br></pre></td></tr></table></figure></p>
+<p>在脚本的开始，我们需要指定我们脚本的类型，然后我们可以写和<code>post-commit</code>一样的checkout命令，修改成这台机器使用的目录：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">#!/bin/bash</span></span><br><span class="line">git --work-tree=/var/www/html --git-dir=/home/demo/proj checkout <span class="_">-f</span></span><br></pre></td></tr></table></figure></p>
+<p>由于这是一个裸仓库，<code>--git-dir</code>应该指向仓库目录的顶层。其它都和之前一样。</p>
+<p>然后，我们需要在脚本里增加一些额外的逻辑。如果我们不小心推送了<code>test-feature</code>分支到服务器上，我们不希望它被部署。我们想确保只部署<code>master</code>分支。</p>
+<p>关于<code>post-receive</code>钩子，你在之前的表格里可能已经注意到，git传递旧版本的提交hash，新版本的提交hash还有作为标准输入到脚本被推送的引用。我们可以通过它检查，该引用是否为<code>master</code>分支。</p>
+<p>首先我们需要读取这个标注输入。每一个被推送的引用，它的三部分信息（旧版本，新版本，引用）被提供给脚本，作为标准输入，之间用空格分开。我们可以用一个<code>while</code>循环包住这条<code>git</code>命令。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">#!/bin/bash</span></span><br><span class="line"><span class="keyword">while</span> <span class="built_in">read</span> oldrev newrev ref</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">    git --work-tree=/var/www/html --git-dir=/home/demo/proj checkout <span class="_">-f</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure></p>
+<p>现在，我们将根据你被提交的内容产生了3个变量。对于master分支的推送，<code>ref</code>对象将包含像是<code>refs/heads/master</code>的东西。我们可以通过使用<code>if</code>检查一下服务器接收到的<code>ref</code>是否为这种格式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="keyword">while</span> <span class="built_in">read</span> oldrev newrev ref</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">    <span class="keyword">if</span> [[ <span class="variable">$ref</span> =~ .*/master$ ]];</span><br><span class="line">    <span class="keyword">then</span></span><br><span class="line">        git --work-tree=/var/www/html --git-dir=/home/demo/proj checkout <span class="_">-f</span></span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+<p>对于服务器端的钩子，git实际上可以将信息传回客户端。任何发送到标准输出的东西都会跳转到客户端。这给了我们机会显式通知用户做了什么样的决策。</p>
+<p>我们应该增加一些文字，描述我们检测到的情况，和我们执行的动作。我们应该添加一个<code>else</code>代码，在一个非<code>master</code>分支被成功接收时通知用户，即使这个动作并不触发部署：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">#!/bin/bash</span></span><br><span class="line"><span class="keyword">while</span> <span class="built_in">read</span> oldrev newrev ref</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">    <span class="keyword">if</span> [[ <span class="variable">$ref</span> =~ .*/master$ ]];</span><br><span class="line">    <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"Master ref received.  Deploying master branch to production..."</span></span><br><span class="line">        git --work-tree=/var/www/html --git-dir=/home/demo/proj checkout <span class="_">-f</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"Ref <span class="variable">$ref</span> successfully received.  Doing nothing: only the master branch may be deployed on this server."</span></span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure></p>
+<p>结束之后，保存并关闭这个文件。</p>
+<p>切记，我们必须给这个脚本可执行的权限。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod +x hooks/post-receive</span><br></pre></td></tr></table></figure>
+<p>现在我们可以在我们本地对这个远程服务器建立访问了。</p>
+<h2 id="在本地机器上配置远程服务器"><a href="#在本地机器上配置远程服务器" class="headerlink" title="在本地机器上配置远程服务器"></a>在本地机器上配置远程服务器</h2><p>回到我们的本地机器（开发机）,进入我们项目的工作目录：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/proj</span><br></pre></td></tr></table></figure></p>
+<p>在文件夹内，添加远程服务器，命名为<code>production</code>。你需要知道声场服务器的用户名，IP地址或者域名。你还需要知道你裸仓库对于home目录的相对路径。</p>
+<p>你输入的命令应该是大体这个样子：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote add production demo@server_domain_or_IP:proj</span><br></pre></td></tr></table></figure></p>
+<p>现在我们推送我们本地分支到生产服务器：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git push production master</span><br></pre></td></tr></table></figure></p>
+<p>如果你没配置SSH的key，那你可能必须输入生产服务器的用户密码。你会看到类似下面的显示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Counting objects: 8, done.</span><br><span class="line">Delta compression using up to 2 threads.</span><br><span class="line">Compressing objects: 100% (3/3), done.</span><br><span class="line">Writing objects: 100% (4/4), 473 bytes | 0 bytes/s, done.</span><br><span class="line">Total 4 (delta 0), reused 0 (delta 0)</span><br><span class="line">remote: Master ref received.  Deploying master branch...</span><br><span class="line">To demo@107.170.14.32:proj</span><br><span class="line">   009183f..f1b9027  master -&gt; master</span><br></pre></td></tr></table></figure></p>
+<p>如你所见，来自我们<code>post-receive</code>钩子的文本出现在命令行的输出中。如果我们使用浏览器访问我们生产服务器的域名或者IP地址，我们可以看到我们项目的当前版本：<br><img src="/20160518/git-hooks/pushed_prod.png" alt="pushed_prod.png" title=""></p>
+<p>看起来钩子收到信息时成功将我们的代码推送到生产服务器。</p>
+<p>现在，让我们测试我们的新代码。回到开发机上，我们将创建一个新分支并进行一些改变。这样，我们可以确保在我们部署到生产环境之前，一切就绪。</p>
+<p>建立一个叫<code>test_feature</code>的新分支，然后checkout：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git checkout -b <span class="built_in">test</span>_feature</span><br></pre></td></tr></table></figure></p>
+<p>我们现在处于<code>test_feature</code>分支中，让我们做一些改变，稍后推送到生产服务器中。我们将提交到这个分支中：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">"&lt;h2&gt;New Feature Here&lt;/h2&gt;"</span> &gt;&gt; index.html</span><br><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">"Trying out new feature"</span></span><br></pre></td></tr></table></figure></p>
+<p>这时候，如果你访问开发机的IP地址或者域名，你将看到你的做的修改。<br><img src="/20160518/git-hooks/devel_commit.png" alt="devel_commit.png" title=""></p>
+<p>这是因为开发机仍在每次提交后部署。这个工作流很棒，它可以让我们在部署生产环境之前测试我们的修改。</p>
+<p>我们可以推送我们的<code>test_feature</code>分支到远程生产服务器：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git push production <span class="built_in">test</span>_feature</span><br></pre></td></tr></table></figure></p>
+<p>在<code>post-receive</code>钩子的输出中应该有其它的信息：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Counting objects: 5, done.</span><br><span class="line">Delta compression using up to 2 threads.</span><br><span class="line">Compressing objects: 100% (2/2), done.</span><br><span class="line">Writing objects: 100% (3/3), 301 bytes | 0 bytes/s, done.</span><br><span class="line">Total 3 (delta 1), reused 0 (delta 0)</span><br><span class="line">remote: Ref refs/heads/test_feature successfully received.  Doing nothing: only the master branch may be deployed on this server</span><br><span class="line">To demo@107.170.14.32:proj</span><br><span class="line">   83e9dc4..5617b50  test_feature -&gt; test_feature</span><br></pre></td></tr></table></figure></p>
+<p>如果我们在浏览器中查看生产服务器，你将看到什么都没有改变。<br>这就是我们所希望的，因为我们的改变不在master分支中。</p>
+<p>现在我们已经在开发机器上测试了我们的修改，我们确定要合并这个修改到master分支上。我们可以checkout到master分支，然后在开发机上merge<code>test_feature</code>分支。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git checkout master</span><br><span class="line">git merge test_feature</span><br></pre></td></tr></table></figure>
+<p>现在，你已经将新分支合并到主分支。推送到生产服务器将部署这个修改：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git push production master</span><br></pre></td></tr></table></figure></p>
+<p>如果我们在浏览器查看生产服务器，我们将看到我们的改变：</p>
+<img src="/20160518/git-hooks/new_prod.png" alt="new_prod.png" title="">
+<p>使用这个工作流，我们可以在开发机上直接显示提交的修改。生产机器只在master分支被推送时候被更新。</p>
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>如果你跟着我的步骤做完，你应该已经了解了git钩子有多种方法将我们一部分工作自动化。它们可以帮你部署代码，可以通过拒绝不符合要求的修改和提交，来控制代码质量。</p>
+<p>然而，git钩子的效用很难讨论，它实际的实现非常复杂。练习实现多种配置，试验解析参数，标准输入，跟踪git如何构建钩子的环境将会带你慢慢了解如何写有效的钩子脚本。从长远上看，时间的投入通常是值得的，它可以很简单的节省你和你团队在项目工作中很多手动操作的负担。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Git/" rel="tag">#Git</a>
+          
+            <a href="/tags/hook/" rel="tag">#hook</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/20160530/MAC批量处理图片/" rel="prev" title="MAC批量处理图片">
+                MAC批量处理图片 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <div class="ds-share flat" data-thread-key="20160518/git-hooks/"
+     data-title="利用Git Hooks自动化开发和部署"
+     data-content=""
+     data-url="http://lioil.thisteam.cn/20160518/git-hooks/">
+  <div class="ds-share-inline">
+    <ul  class="ds-share-icons-16">
+
+      <li data-toggle="ds-share-icons-more"><a class="ds-more" href="javascript:void(0);">分享到：</a></li>
+      <li><a class="ds-weibo" href="javascript:void(0);" data-service="weibo">微博</a></li>
+      <li><a class="ds-qzone" href="javascript:void(0);" data-service="qzone">QQ空间</a></li>
+      <li><a class="ds-qqt" href="javascript:void(0);" data-service="qqt">腾讯微博</a></li>
+      <li><a class="ds-wechat" href="javascript:void(0);" data-service="wechat">微信</a></li>
+
+    </ul>
+    <div class="ds-share-icons-more">
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  <p>热评文章</p>
+  <div class="ds-top-threads" data-range="weekly" data-num-items="4"></div>
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="20160518/git-hooks/"
+           data-title="利用Git Hooks自动化开发和部署" data-url="http://lioil.thisteam.cn/20160518/git-hooks/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpeg"
+               alt="Hao Jie" />
+          <p class="site-author-name" itemprop="name">Hao Jie</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">5</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#介绍"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#准备工作"><span class="nav-number">2.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Git-Hooks的基本原理"><span class="nav-number">3.</span> <span class="nav-text">Git Hooks的基本原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#建立一个仓库"><span class="nav-number">4.</span> <span class="nav-text">建立一个仓库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#第一个例子：用一个post-commit-Hook来部署一个web服务。"><span class="nav-number">5.</span> <span class="nav-text">第一个例子：用一个post-commit Hook来部署一个web服务。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于git钩子环境变量的一些题外话"><span class="nav-number">6.</span> <span class="nav-text">关于git钩子环境变量的一些题外话</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回到脚本"><span class="nav-number">7.</span> <span class="nav-text">回到脚本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#利用Git钩子在另外的生产环境中部署"><span class="nav-number">8.</span> <span class="nav-text">利用Git钩子在另外的生产环境中部署</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#建立生产环境的post-receive钩子"><span class="nav-number">9.</span> <span class="nav-text">建立生产环境的post-receive钩子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在本地机器上配置远程服务器"><span class="nav-number">10.</span> <span class="nav-text">在本地机器上配置远程服务器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#结论"><span class="nav-number">11.</span> <span class="nav-text">结论</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Hao Jie</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+    
+
+
+  <script type="text/javascript" src="/js/src/hao-algolia.js?v=5.0.1"></script>
+
+  <script src="http://cdn.bootcss.com/instantsearch.js/1.5.1/instantsearch.js"></script>
+
+  
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"gasquet"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("rqYbvOvy7KNi1UqrGpKdTmTz-gzGzoHsz", "SFOLEDh7YOjdMN9wEQ43wAob");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+</body>
+</html>
