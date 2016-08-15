@@ -87,3 +87,6 @@ algolia:
   adminApiKey: '3e90b4f83d695573ef8c53d692c6bc2f'
   indexName: 'hexo'
   chunkSize: 5000
+
+#cnzz
+cnzz_siteid: 1259568523

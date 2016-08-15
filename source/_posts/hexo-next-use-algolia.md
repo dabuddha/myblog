@@ -1,5 +1,5 @@
 ---
-title: 在Next主题下使用Algolia搜索
+title: 在Hexo下使用Algolia搜索
 date: 2016-06-06 23:23:19
 categories: Hexo
 tags:
@@ -7,8 +7,7 @@ tags:
 - Next
 - swiftype
 ---
-Swiftype悄无声息的就取消了免费模式，新用户注册只能免费试用14天，老用户好像还能继续免费用(好在我下手早╮(╯▽╰)╭ )。
-未雨绸缪吧，免得哪天我也不能用了，推一个新的第三方搜索----algolia。
+Swiftype悄无声息的就取消了免费模式，得赶紧找个下家了，现在来推一个新的第三方搜索----algolia。
 <!-- more -->
 
 ## 官网注册
@@ -636,6 +635,8 @@ a.search-result {
 {% asset_img algolia_logo.svg %}
 
 ## 大功告成~，可以参考本站搜索功能。
+
+ps：最后再说一句，algolia最开始会给你14天的高级试用功能，结束之后会停止工作，你需要手动切换到免费模式下才能继续。
 
 
 
